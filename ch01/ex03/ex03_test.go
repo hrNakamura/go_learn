@@ -11,6 +11,7 @@ func BenchmarkJoin(b *testing.B) {
 
 func BenchmarkAppend(b *testing.B) {
 	for i := 0; i < b.N; i++ {
+		arg := []string{"a", "b", "c"}
 		Append(arg)
 	}
 }
