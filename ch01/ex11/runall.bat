@@ -1,0 +1,2 @@
+cd %~dp0
+go run .\main.go http://google.com http://youtube.com http://facebook.com http://baidu.com http://wikipedia.org http://www.yahoo.com http://reddit.com http://google.co.in http://qq.com http://taobao.com http://amazon.com http://twitter.com http://google.co.jp http://tmall.com http://sohu.com
