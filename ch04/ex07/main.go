@@ -3,17 +3,31 @@ package main
 
 import (
 	"fmt"
+	"unicode/utf8"
 )
 
 func main() {
-	a := [...]int{0, 1, 2, 3, 4, 5}
+	a := []byte("あbcえe")
+	fmt.Println(string(a))
 	fmt.Println(a)
-	reverse(a[:])
-	fmt.Println(a)
+	reverse(a)
+	fmt.Println(string(a))
 }
 
-func reverse(s []int) {
-	for i, j := 0, len(s)-1; i < j; i, j = i+1, j-1 {
-		s[i], s[j] = s[j], s[i]
+func reverse(s []byte) {
+	for i := len(s) - 1; i >= 0; {
+		_, size := utf8.DecodeRune(s[0:])
+		for j := size - 1; j >= 0; j-- {
+			move(s, j, i)
+			fmt.Println(s)
+			i--
+		}
+	}
+}
+
+//stで指定した要素をendの位置まで右に移動する
+func move(s []byte, st, end int) {
+	for i := st; i < end; i++ {
+		s[i+1], s[i] = s[i], s[i+1]
 	}
 }
