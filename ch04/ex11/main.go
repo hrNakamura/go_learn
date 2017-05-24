@@ -18,8 +18,8 @@ type singleIssue struct {
 }
 
 type createIssue struct {
-	Title    string   `json:"title"`
-	Body     string   `json:"body"`
+	Title    string   `json:"title,omitempty"`
+	Body     string   `json:"body,omitempty"`
 	Assignee string   `json:"assignee,omitempty"`
 	Labels   []string `json:"labels,omitempty"`
 }
@@ -31,7 +31,8 @@ const APIURL = "https://api.github.com"
 const GitHubToken = "e4fc10d742090777175b340b00f13b5bcf9a67fe"
 
 func main() {
-	createNewIssue()
+	// createNewIssue()
+	updateIssue()
 	data, err := getSingleIssue("hrNakamura", "go_learn", 1)
 	if err != nil {
 		log.Fatalf("%s\n", err)
@@ -92,7 +93,31 @@ func createNewIssue() {
 }
 
 func updateIssue() {
+	url := APIURL + "/repos/hrNakamura/go_learn/issues/2"
+	var st createIssue
+	st.Body = "update"
 
+	jsonStr, err := json.Marshal(st)
+	if err != nil {
+		log.Fatalf("%s\n", err)
+	}
+	fmt.Println(string(jsonStr))
+
+	req, err := http.NewRequest("PATCH", url, bytes.NewBuffer(jsonStr))
+	req.Header.Set("Content-Type", "application/json")
+	token := "token " + GitHubToken
+	req.Header.Set("Authorization", token)
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Fatalf("%s", err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusCreated {
+		log.Fatalf("%s", resp.Status)
+	}
+	fmt.Printf("%s\n", resp.Status)
 }
 
 func closeIssue() {
