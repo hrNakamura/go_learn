@@ -3,123 +3,192 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"flag"
 	"fmt"
 	"log"
 	"net/http"
 	"strconv"
 )
 
-type singleIssue struct {
-	Number  int
-	HTMLURL string `json:"html_url"`
-	State   string
-	Title   string
-	Body    string
-}
-
-type createIssue struct {
-	Title    string   `json:"title,omitempty"`
-	Body     string   `json:"body,omitempty"`
-	Assignee string   `json:"assignee,omitempty"`
-	Labels   []string `json:"labels,omitempty"`
+type githubIssue struct {
+	Number  int    `json:"number,omitempty"`
+	HTMLURL string `json:"html_url,omitempty"`
+	Title   string `json:"title,omitempty"`
+	Body    string `json:"body,omitempty"`
+	State   string `json:"state,omitempty"`
 }
 
 // APIURL Github api
 const APIURL = "https://api.github.com"
 
 // GitHubToken access token
-const GitHubToken = "e4fc10d742090777175b340b00f13b5bcf9a67fe"
+const GitHubToken = "b5bfed530f1d4ff86a80a9d3308a51e46e02a8cc"
+
+const (
+	createCom = "Create"
+	readCom   = "Read"
+	editCom   = "Edit"
+	closeCom  = "Close"
+)
 
 func main() {
-	// createNewIssue()
-	updateIssue()
-	data, err := getSingleIssue("hrNakamura", "go_learn", 1)
-	if err != nil {
-		log.Fatalf("%s\n", err)
+	var (
+		owner  string
+		rep    string
+		number int
+		com    string
+	)
+	var issue githubIssue
+	flag.StringVar(&owner, "o", "", "リポジトリのオーナー名")
+	flag.StringVar(&rep, "r", "", "リポジトリ名")
+	flag.IntVar(&number, "n", 0, "issueの番号")
+	flag.StringVar(&com, "c", "", "実行するコマンド")
+	flag.StringVar(&issue.Title, "title", "", "json タイトル")
+	flag.StringVar(&issue.Body, "body", "", "json body")
+	flag.Parse()
+
+	switch com {
+	case createCom:
+		result, err := createIssue(owner, rep, &issue)
+		if err != nil {
+			log.Fatalf("%s\n", err)
+		}
+		resStr, err := json.MarshalIndent(result, "", "  ")
+		if err != nil {
+			log.Fatalf("%s\n", err)
+		}
+		fmt.Printf("%s\n", resStr)
+	case readCom:
+		result, err := readIssue(owner, rep, number)
+		if err != nil {
+			log.Fatalf("%s\n", err)
+		}
+		resStr, err := json.MarshalIndent(result, "", "  ")
+		if err != nil {
+			log.Fatalf("%s\n", err)
+		}
+		fmt.Printf("%s\n", resStr)
+	case closeCom:
+		result, err := closeIssue(owner, rep, number)
+		if err != nil {
+			log.Fatalf("%s\n", err)
+		}
+		resStr, err := json.MarshalIndent(result, "", "  ")
+		if err != nil {
+			log.Fatalf("%s\n", err)
+		}
+		fmt.Printf("%s\n", resStr)
+	case editCom:
+		result, err := editIssue(owner, rep, number, &issue)
+		if err != nil {
+			log.Fatalf("%s\n", err)
+		}
+		resStr, err := json.MarshalIndent(result, "", "  ")
+		if err != nil {
+			log.Fatalf("%s\n", err)
+		}
+		fmt.Printf("%s\n", resStr)
+	default:
+		log.Fatal("unkown command")
 	}
-	mar, err := json.MarshalIndent(data, "", "	")
-	if err != nil {
-		log.Fatalf("%s\n", err)
-	}
-	fmt.Printf("%s\n", mar)
 }
 
-func getSingleIssue(owner, repos string, number int) (*singleIssue, error) {
+func readIssue(owner, repos string, number int) (*githubIssue, error) {
 	q := "/repos/" + owner + "/" + repos + "/issues/" + strconv.Itoa(number)
 	resp, err := http.Get(APIURL + q)
 	if err != nil {
 		return nil, err
 	}
 	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("Get query failed: %s", resp.Status)
-	}
-	var result singleIssue
-	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+	var issue githubIssue
+	if err := json.NewDecoder(resp.Body).Decode(&issue); err != nil {
 		return nil, err
 	}
-	return &result, nil
+	return &issue, nil
 }
 
-func createNewIssue() {
-	url := APIURL + "/repos/hrNakamura/go_learn/issues"
-	var st createIssue
-	st.Title = "new issue"
-	st.Body = "test"
-	st.Assignee = "hrNakamura"
-	// st.Labels = append(st.Labels, "bug")
-	jsonStr, err := json.Marshal(st)
+func createIssue(owner, repos string, input *githubIssue) (*githubIssue, error) {
+	url := APIURL + "/repos/" + owner + "/" + repos + "/issues"
+	jsonbytes, err := json.Marshal(input)
 	if err != nil {
 		log.Fatalf("%s\n", err)
 	}
-	fmt.Println(string(jsonStr))
-
-	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonStr))
-	req.Header.Set("Content-Type", "application/json")
-	token := "token " + GitHubToken
-	req.Header.Set("Authorization", token)
-
-	client := &http.Client{}
-	resp, err := client.Do(req)
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonbytes))
 	if err != nil {
-		log.Fatalf("%s", err)
+		return nil, err
 	}
+
+	resp, err := sendRequest(req)
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusCreated {
-		log.Fatalf("%s", resp.Status)
+		log.Fatalf("%s\n", resp.Status)
 	}
-	fmt.Printf("%s\n", resp.Status)
+	var issue githubIssue
+	if err := json.NewDecoder(resp.Body).Decode(&issue); err != nil {
+		return nil, err
+	}
+	return &issue, nil
 }
 
-func updateIssue() {
-	url := APIURL + "/repos/hrNakamura/go_learn/issues/2"
-	var st createIssue
-	st.Body = "update"
+func editIssue(owner, repos string, number int, input *githubIssue) (*githubIssue, error) {
+	url := APIURL + "/repos/" + owner + "/" + repos + "/issues/" + strconv.Itoa(number)
+	jsonbytes, err := json.Marshal(input)
+	if err != nil {
+		log.Fatalf("%s\n", err)
+	}
+
+	req, err := http.NewRequest("PATCH", url, bytes.NewBuffer(jsonbytes))
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := sendRequest(req)
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		log.Fatalf("%s\n", resp.Status)
+	}
+	var issue githubIssue
+	if err := json.NewDecoder(resp.Body).Decode(&issue); err != nil {
+		return nil, err
+	}
+	return &issue, nil
+}
+
+func closeIssue(owner, repos string, number int) (*githubIssue, error) {
+	url := APIURL + "/repos/" + owner + "/" + repos + "/issues/" + strconv.Itoa(number)
+	var st githubIssue
+	st.State = "close"
 
 	jsonStr, err := json.Marshal(st)
 	if err != nil {
 		log.Fatalf("%s\n", err)
 	}
-	fmt.Println(string(jsonStr))
 
 	req, err := http.NewRequest("PATCH", url, bytes.NewBuffer(jsonStr))
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := sendRequest(req)
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		log.Fatalf("%s\n", resp.Status)
+	}
+	var issue githubIssue
+	if err := json.NewDecoder(resp.Body).Decode(&issue); err != nil {
+		return nil, err
+	}
+	return &issue, nil
+}
+
+func sendRequest(req *http.Request) (*http.Response, error) {
 	req.Header.Set("Content-Type", "application/json")
 	token := "token " + GitHubToken
 	req.Header.Set("Authorization", token)
-
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		log.Fatalf("%s", err)
+		return nil, err
 	}
-	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusCreated {
-		log.Fatalf("%s", resp.Status)
-	}
-	fmt.Printf("%s\n", resp.Status)
-}
-
-func closeIssue() {
-
+	return resp, nil
 }
