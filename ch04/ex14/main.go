@@ -12,7 +12,6 @@ import (
 	"log"
 	"net/http"
 	"net/url"
-	"os"
 	"strings"
 	"text/template"
 	"time"
@@ -39,59 +38,86 @@ func daysAgo(t time.Time) int {
 //!-daysAgo
 
 const UserURL = "https://api.github.com/search/users"
+const BugFilter = "+label:bug"
 
 type UserResults struct {
 	TotalCount int            `json:"total_count"`
 	Users      []*github.User `json:"items"`
 }
 
-const usersTmpl = `{{.TotalCount}} issues:
+const usersTmpl = `Users
+{{.TotalCount}} issues:
 {{range .Users}}----------------------------------------
 User:	{{.Login}}
 HTMLURL:{{.HTMLURL}}
-{{end}}`
+{{end}}
+`
+
+type BugResults struct {
+	TotalCount int
+	Items      []*BugItems
+}
+
+type BugItems struct {
+	Title     string
+	HTMLURL   string `json:"html_url"`
+	State     string
+	CreatedAt time.Time `json:"created_at"`
+	Body      string
+}
+
+const bugTempl = `Bug Report
+{{.TotalCount}} issues:
+{{range .Items}}----------------------------------------
+Title: {{.Title}}
+URL:   {{.HTMLURL}}
+State:  {{.State}}
+CreateAt:    {{.CreatedAt | daysAgo}} days
+{{end}}
+`
 
 //!+exec
 var report = template.Must(template.New("issuelist").
 	Funcs(template.FuncMap{"daysAgo": daysAgo}).
 	Parse(templ))
 
-var usersReport = template.Must(template.New("userlist").Parse(usersTmpl))
+var usersReport = template.Must(template.New("userlist").
+	Parse(usersTmpl))
+
+var bugReport = template.Must(template.New("buglist").
+	Funcs(template.FuncMap{"daysAgo": daysAgo}).
+	Parse(bugTempl))
 
 func main() {
-	// result, err := github.SearchIssues(os.Args[1:])
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-	// if err := report.Execute(os.Stdout, result); err != nil {
-	// 	log.Fatal(err)
-	// }
-
-	userResult, err := searchUsers(os.Args[1:])
-	if err != nil {
-		log.Fatal(err)
-	}
-	if err := usersReport.Execute(os.Stdout, userResult); err != nil {
-		log.Fatal(err)
-	}
+	http.HandleFunc("/", handler)
+	log.Fatal(http.ListenAndServe("localhost:8000", nil))
 }
 
 //!-exec
 
-func noMust() {
-	//!+parse
-	report, err := template.New("report").
-		Funcs(template.FuncMap{"daysAgo": daysAgo}).
-		Parse(templ)
+func handler(w http.ResponseWriter, r *http.Request) {
+	termBase := r.URL.Path[1:]
+	terms := strings.Split(termBase, "+")
+
+	// result, err := github.SearchIssues(terms)
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+	// if err := report.Execute(w, result); err != nil {
+	// 	log.Fatal(err)
+	// }
+	userResult, err := searchUsers(terms)
 	if err != nil {
 		log.Fatal(err)
 	}
-	//!-parse
-	result, err := github.SearchIssues(os.Args[1:])
+	if err := usersReport.Execute(w, userResult); err != nil {
+		log.Fatal(err)
+	}
+	bugResult, err := searchBugReports(terms)
 	if err != nil {
 		log.Fatal(err)
 	}
-	if err := report.Execute(os.Stdout, result); err != nil {
+	if err := bugReport.Execute(w, bugResult); err != nil {
 		log.Fatal(err)
 	}
 }
@@ -108,6 +134,24 @@ func searchUsers(terms []string) (*UserResults, error) {
 	}
 
 	var result UserResults
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return nil, err
+	}
+	return &result, nil
+}
+
+func searchBugReports(terms []string) (*BugResults, error) {
+	q := url.QueryEscape(strings.Join(terms, " "))
+	resp, err := http.Get(github.IssuesURL + "?q=" + q + BugFilter)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("search query failed: %s", resp.Status)
+	}
+
+	var result BugResults
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		return nil, err
 	}
