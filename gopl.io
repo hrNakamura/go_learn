@@ -1,1 +1,0 @@
-../../go/src/gopl.io
