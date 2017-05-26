@@ -8,7 +8,7 @@ import (
 
 func main() {
 	if len(os.Args) == 3 {
-		fmt.Printf("%v , %v anagram=%v", os.Args[1], os.Args[2], anagram(os.Args[1], os.Args[2]))
+		fmt.Printf("%s , %s anagram=%v", os.Args[1], os.Args[2], anagram(os.Args[1], os.Args[2]))
 	}
 }
 

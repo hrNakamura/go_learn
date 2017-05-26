@@ -23,6 +23,8 @@ var regX = regexp.MustCompile(`x=\d`)
 var regY = regexp.MustCompile(`y=\d`)
 var regN = regexp.MustCompile(`n=\d`)
 
+//TODO X,Yはフラクタル画像の中心点、倍率は画像の拡大縮小率
+
 func main() {
 	http.HandleFunc("/", route) // each request calls handler
 	log.Fatal(http.ListenAndServe("localhost:8000", nil))
