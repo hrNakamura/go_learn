@@ -15,3 +15,5 @@ func rotate(s []int, n int) []int {
 	s = append(s, s[:n]...)
 	return s[n:]
 }
+
+//TODO 開始点に退避させて移動先と入れ替える

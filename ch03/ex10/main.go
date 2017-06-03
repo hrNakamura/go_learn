@@ -15,13 +15,14 @@ func main() {
 //!+
 // comma inserts commas in a non-negative decimal integer string.
 func comma(s string) string {
+	//TODO Byte.Bufferを使うこと
 	b := []byte(s)
 	n := len(b)
 	if n <= 3 {
 		return s
 	}
 	m := n % 3
-	str := make([]byte, m)
+	str := make([]byte, m) //TODO 空スライスとする、長さを0としないと正常な結果とならない
 	if m != 0 {
 		str = append(str, b[:m]...)
 		str = append(str, byte(','))

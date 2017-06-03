@@ -65,8 +65,8 @@ func corner(i, j int) (float64, float64, bool) {
 
 	// Project (x,y,z) isometrically onto 2-D SVG canvas (sx,sy).
 	sx := width/2 + (x-y)*cos30*xyscale
-	sy := height/2 + (x+y)*sin30*xyscale - z*zscale
-	return sx, sy, true
+	sy := height/2 + (x+y)*sin30*xyscale - z*zscale //TODO ここの演算で無限大になる可能性もある
+	return sx, sy, true                             //TODO ここの戻り値が有限でないかを判定する)
 }
 
 func f(x, y float64) float64 {

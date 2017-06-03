@@ -26,6 +26,8 @@ func main() {
 					x := float64(px+sx)/width*(xmax-xmin) + xmin
 					z := complex(x, y)
 					v, _, _, _ := mandelbrot(z).RGBA()
+					//TODO RGBAは16bitを返す、上位８itと下位8bitは同じ値
+					//TODO そのためビットシフトして代入する
 					val += v
 				}
 			}

@@ -4,19 +4,15 @@ import (
 	"fmt"
 )
 
+//TODO stringスライス
 func main() {
-	a := []int{0, 1, 1, 1, 4, 5}
+	a := []string{"aaa", "bbb", "bbb", "bb", "cc", "dd"}
 	fmt.Println(a)
 	a = remDup(a)
 	fmt.Println(a)
-	b := []int{0, 1, 2, 3, 4, 5}
-	fmt.Println(b)
-	b = remDup(b)
-	fmt.Println(b)
-
 }
 
-func remDup(s []int) []int {
+func remDup(s []string) []string {
 	for i := 1; i < len(s); i++ {
 		if s[i-1] == s[i] {
 			copy(s[i-1:], s[i:])

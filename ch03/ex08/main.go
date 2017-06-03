@@ -103,7 +103,7 @@ func mandelbrotC64(z complex64) color.Color {
 }
 
 func mandelbrotBigFloat(z complexBigFloat) color.Color {
-	const iterations = 10
+	const iterations = 200
 	const contrast = 15
 	th := new(big.Float).SetFloat64(2.0)
 
