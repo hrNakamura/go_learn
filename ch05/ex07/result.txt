@@ -1,0 +1,155 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta name="go-import" content="gopl.io git https://github.com/adonovan/gopl.io">
+    </meta>
+    <title>
+      The Go Programming Language    </title>
+    <script>
+    </script>
+    <link rel="stylesheet" type="text/css" href="style.css">
+    </link>
+    <style>
+    </style>
+  </head>
+  <body>
+    <table>
+      <tbody>
+        <tr>
+          <td>
+            <a href="http://www.informit.com/store/go-programming-language-9780134190440">
+              <img border="1" src="cover.png" height="600">
+              </img>
+            </a>
+            <br>
+            </br>
+            <div style="text-align: center">
+              <a href="http://www.amazon.com/dp/0134190440">
+                <img border="0" width="150" src="buyfromamazon.png">
+                </img>
+              </a>
+              <a href="http://www.informit.com/store/go-programming-language-9780134190440">
+                <img border="0" height="26" src="informit.png">
+                </img>
+              </a>
+              <a href="http://www.barnesandnoble.com/w/1121601944">
+                <img border="0" width="150" src="barnesnoble.png">
+                </img>
+              </a>
+            </div>
+            <br>
+            </br>
+          </td>
+          <td width="500">
+            <h1 class="center">
+              The Go Programming Language            </h1>
+            <p class="biblio center">
+              <br>
+              </br>
+              <br>
+              </br>
+              <br>
+              </br>
+              <tt>
+                authors              </tt>
+              <tt>
+                @              </tt>
+              <tt>
+                gopl.io              </tt>
+            </p>
+              <!-- Table of Contents -->
+            <div id="toc">
+              <table>
+                <tbody>
+                  <tr>
+                    <td>
+                      <h1>
+                        Contents [                        <a href="ch1.pdf">
+                          PDF                        </a>
+                        ]                      </h1>
+                      <h1>
+                        Preface  [                        <a href="ch1.pdf">
+                          PDF                        </a>
+                        ]                      </h1>
+                      <h1>
+                        1. Tutorial [                        <a href="ch1.pdf">
+                          PDF                        </a>
+                        ]                      </h1>
+                      <h1>
+                        2. Program Structure                      </h1>
+                      <h1>
+                        3. Basic Data Types                      </h1>
+                      <h1>
+                        4. Composite Types                      </h1>
+                      <h1>
+                        5. Functions                      </h1>
+                      <h1>
+                        6. Methods                      </h1>
+                    </td>
+                    <td>
+                      <h1>
+                        7. Interfaces                      </h1>
+                      <h1>
+                        8. Goroutines and Channels                      </h1>
+                      <h1>
+                        9. Concurrency with Shared Variables                      </h1>
+                      <h1>
+                        10. Packages and the Go Tool                      </h1>
+                      <h1>
+                        11. Testing                      </h1>
+                      <h1>
+                        12. Reflection                      </h1>
+                      <h1>
+                        13. Low-Level Programming                      </h1>
+                      <h1>
+                        Index  [                        <a href="ch1.pdf">
+                          PDF                        </a>
+                        ]                      </h1>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td colspan="2">
+                      <h1>
+                        <a href="https://github.com/adonovan/gopl.io/">
+                          Source code                        </a>
+                        <a href="reviews.html">
+                          Reviews                        </a>
+                        <a href="translations.html">
+                          Translations                        </a>
+                        <a href="errata.html">
+                          Errata                        </a>
+                      </h1>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <p class="bio">
+              <a href="http://golang.org/s/oracle-user-manual">
+                <code>
+                  oracle                </code>
+              </a>
+              <a href="http://golang.org/lib/godoc/analysis/help.html">
+                <code>
+                  godoc -analysis                </code>
+              </a>
+              <a href="https://github.com/golang/tools/blob/master/refactor/eg/eg.go">
+                <code>
+                  eg                </code>
+              </a>
+              <a href="https://github.com/golang/tools/blob/master/refactor/rename/rename.go">
+                <code>
+                  gorename                </code>
+              </a>
+            </p>
+            <p class="bio">
+              <a href="http://www.amazon.com/dp/0131103628?tracking_id=disfordig-20">
+                The C Programming Language              </a>
+              <a href="http://www.amazon.com/dp/020161586X?tracking_id=disfordig-20">
+                The Practice of Programming              </a>
+            </p>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </body>
+</html>

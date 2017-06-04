@@ -18,7 +18,7 @@ func main() {
 }
 
 func outline(n *html.Node) {
-	if n.Type == html.ElementNode && (n.Data == "script" || n.Data == "style") {
+	if n.Type == html.TextNode && (n.Data == "script" || n.Data == "style") {
 		if n.NextSibling != nil {
 			outline(n.NextSibling)
 		} else {
