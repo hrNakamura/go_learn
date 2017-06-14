@@ -73,7 +73,7 @@ func startElement(n *html.Node) {
 			// fmt.Printf("%*s<%s>\n", depth*2, "", n.Data)
 		} else if n.Data == "style" {
 
-		} else if !strings.Contains(n.Data, "\n") {
+		} else if n.Data!="\n") {
 			fmt.Printf("%*s%s", depth*2, "", n.Data)
 		}
 	}
