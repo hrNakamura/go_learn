@@ -5,14 +5,17 @@ import (
 	"os"
 )
 
-func join(strs ...string) string {
+func join(sep string, strs ...string) string {
 	var str string
-	for _, s := range strs {
+	for i, s := range strs {
 		str += s
+		if i != len(strs)-1 {
+			str += sep
+		}
 	}
 	return str
 }
 
 func main() {
-	fmt.Println(join(os.Args[1:]...))
+	fmt.Println(join(os.Args[1], os.Args[2:]...))
 }
