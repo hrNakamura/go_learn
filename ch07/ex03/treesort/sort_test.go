@@ -1,7 +1,7 @@
 // Copyright © 2016 Alan A. A. Donovan & Brian W. Kernighan.
 // License: https://creativecommons.org/licenses/by-nc-sa/4.0/
 
-package treesort_test
+package treesort
 
 import (
 	"math/rand"
@@ -10,6 +10,15 @@ import (
 
 	"gopl.io/ch4/treesort"
 )
+
+func TestString(t *testing.T) {
+	d := &tree{value: 3}
+	d = add(d, 1)
+	d = add(d, 4)
+	if d.String() != "1, 3, 4" {
+		t.Error(d.String())
+	}
+}
 
 func TestSort(t *testing.T) {
 	data := make([]int, 50)

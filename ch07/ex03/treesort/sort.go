@@ -6,7 +6,7 @@
 // Package treesort provides insertion sort using an unbalanced binary tree.
 package treesort
 
-import "strconv"
+import "fmt"
 
 //!+
 type tree struct {
@@ -15,29 +15,13 @@ type tree struct {
 }
 
 func (t *tree) String() string {
-	var depth int
-	var lshift int
-}
-
-func appendStr(t *tree, s map[int][]string, depth, left, right *int) {
-	if t.left != nil {
-		*depth++
-		*left++
-		appendStr(t.left, s, depth, left, right)
+	values := make([]int, 0)
+	values = appendValues(values, t)
+	s := fmt.Sprintf("%d", values[0])
+	for _, v := range values[1:] {
+		s += fmt.Sprintf(", %d", v)
 	}
-	for i := 0; i < *shift; i++ {
-		s[*depth] = append(s[*depth], " ")
-	}
-	s[*depth] = append(s[*depth], strconv.Itoa(t.value))
-	if t.right != nil {
-		*depth++
-		*shift++
-		appendStr(t.right, s, depth, shift)
-	}
-	if *depth > 0
-	*depth--
-}
-if *shift
+	return s
 }
 
 // Sort sorts values in place.

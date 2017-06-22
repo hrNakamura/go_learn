@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	"io"
-	"os"
+	"log"
 
 	"golang.org/x/net/html"
 )
@@ -14,6 +14,10 @@ type myNewReader struct {
 
 func (r myNewReader) Read(p []byte) (int, error) {
 	n := copy(p, []byte(r.s))
+	r.s = r.s[n:]
+	if len(r.s) == 0 {
+		return n, io.EOF
+	}
 	return n, nil
 }
 
@@ -22,27 +26,11 @@ func MyNewReader(s string) io.Reader {
 }
 
 func main() {
-
-	doc, err := html.Parse(MyNewReader(os.Args[1]))
+	s := "<html><body><p>Hello Go</p></body></html>"
+	n, err := html.Parse(MyNewReader(s))
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "findlinks1: %v\n", err)
-		os.Exit(1)
+		log.Fatal(err)
+	} else {
+		fmt.Printf("Type=%v\n", n.Type)
 	}
-	for _, link := range visit(nil, doc) {
-		fmt.Println(link)
-	}
-}
-
-func visit(links []string, n *html.Node) []string {
-	if n.Type == html.ElementNode && n.Data == "a" {
-		for _, a := range n.Attr {
-			if a.Key == "href" {
-				links = append(links, a.Val)
-			}
-		}
-	}
-	for c := n.FirstChild; c != nil; c = c.NextSibling {
-		links = visit(links, c)
-	}
-	return links
 }
