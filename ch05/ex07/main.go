@@ -34,11 +34,6 @@ func outline(url string) error {
 	return nil
 }
 
-//!+forEachNode
-// forEachNode calls the functions pre(x) and post(x) for each node
-// x in the tree rooted at n. Both functions are optional.
-// pre is called before the children are visited (preorder) and
-// post is called after (postorder).
 func forEachNode(n *html.Node, pre, post func(n *html.Node)) {
 	if pre != nil {
 		pre(n)
@@ -55,37 +50,64 @@ func forEachNode(n *html.Node, pre, post func(n *html.Node)) {
 
 //!-forEachNode
 
+func printStartElement(n *html.Node) {
+	fmt.Printf("%*s<%s", depth*2, "", n.Data)
+	for _, a := range n.Attr {
+		fmt.Printf(" %s=\"%s\"", a.Key, a.Val)
+	}
+	if n.FirstChild == nil {
+		fmt.Println("/>")
+	} else {
+		fmt.Println(">")
+	}
+}
+
+func printEndElement(n *html.Node) {
+	if n.FirstChild != nil {
+		fmt.Printf("%*s</%s>\n", depth*2, "", n.Data)
+	}
+}
+
+func printStartComment(n *html.Node) {
+	fmt.Printf("<!--%s", n.Data)
+}
+
+func printEndComment(n *html.Node) {
+	fmt.Println("-->")
+}
+
+func printTextNode(n *html.Node) {
+	str := strings.TrimSpace(n.Data)
+	if str != "" {
+		fmt.Printf("%*s%s", depth*2, "", str)
+	}
+}
+
 //!+startend
 var depth int
 
 func startElement(n *html.Node) {
 	if n.Type == html.ElementNode {
-		fmt.Printf("%*s<%s", depth*2, "", n.Data)
-
-		for _, a := range n.Attr {
-			fmt.Printf(" %s=\"%s\"", a.Key, a.Val)
-		}
-		fmt.Print(">\n")
+		printStartElement(n)
 		depth++
 	}
 	if n.Type == html.TextNode {
-		if n.Data == "script" {
-			// fmt.Printf("%*s<%s>\n", depth*2, "", n.Data)
-		} else if n.Data == "style" {
-
-		} else if n.Data!="\n") {
-			fmt.Printf("%*s%s", depth*2, "", n.Data)
-		}
+		printTextNode(n)
 	}
 	if n.Type == html.CommentNode {
-		fmt.Printf("%*s<!--%s-->\n", depth*2+2, "", n.Data)
+		printStartComment(n)
+		depth++
 	}
 }
 
 func endElement(n *html.Node) {
 	if n.Type == html.ElementNode {
 		depth--
-		fmt.Printf("%*s</%s>\n", depth*2, "", n.Data)
+		printEndElement(n)
+	}
+	if n.Type == html.CommentNode {
+		depth--
+		printEndComment(n)
 	}
 }
 
