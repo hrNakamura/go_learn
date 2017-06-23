@@ -27,9 +27,7 @@ func main() {
 
 func (c countingWriter) Write(p []byte) (int, error) {
 	n, err := c.writer.Write(p)
-	if err == nil {
-		*c.count += int64(n)
-	}
+	*c.count += int64(n)
 	return n, err
 }
 
