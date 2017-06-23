@@ -12,10 +12,18 @@ import (
 )
 
 func TestString(t *testing.T) {
-	d := &tree{value: 3}
+
+	d := &tree{}
+	if d.String() != "0" {
+		t.Error(d.String())
+	}
+	d = add(d, 3)
+	if d.String() != "0, 3" {
+		t.Error(d.String())
+	}
 	d = add(d, 1)
 	d = add(d, 4)
-	if d.String() != "1, 3, 4" {
+	if d.String() != "0, 1, 3, 4" {
 		t.Error(d.String())
 	}
 }
