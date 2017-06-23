@@ -3,6 +3,8 @@ package intset
 import "testing"
 
 func TestElems(t *testing.T) {
+	bit := 32 << (^uint(0) >> 63)
+	t.Logf("bit=%d", bit)
 	var s IntSet
 	e := []int{1, 2, 3}
 	s.AddAll(e...)

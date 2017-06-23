@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"log"
-	"sort"
 )
 
 //!+table
@@ -61,7 +60,7 @@ func topoSort(m map[string][]string) ([]string, error) {
 		keys = append(keys, key)
 	}
 
-	sort.Strings(keys)
+	// sort.Strings(keys)
 	visitAll(keys)
 	if checkLoop(order) {
 		return nil, fmt.Errorf("loop %v", prereqs)

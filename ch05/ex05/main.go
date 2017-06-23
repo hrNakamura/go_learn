@@ -10,6 +10,7 @@ import (
 	"golang.org/x/net/html"
 )
 
+//TODO 要修正
 func main() {
 	var url string
 	if len(os.Args) > 1 {
@@ -45,22 +46,26 @@ func CountWordsAndImages(url string) (words, imagaes int, err error) {
 }
 
 func countWordsAndImages(n *html.Node) (words, images int) {
-	words, images, _ = visit(0, 0, n)
+	visit(&words, &images, n)
 	return
 }
 
-func visit(words, images int, n *html.Node) (w, i int, node *html.Node) {
-	words += countWords(n)
-	images += countImages(n)
+func visit(words, images *int, n *html.Node) (w, i int) {
+	*words += countWords(n)
+	*images += countImages(n)
+	//TODO nodeを返す必要はない
+	//タプルでは+=ができないため
 	for c := n.FirstChild; c != nil; c = n.NextSibling {
-		words, images, n = visit(words, images, c)
+		w, i = visit(words, images, c)
+		*words += w
+		*images += i
 	}
-	return words, images, n
+	return *words, *images
 }
 
 func countWords(n *html.Node) int {
 	var count int
-	if n.Type == html.TextNode && n.Data != "script" && n.Data != "style" {
+	if n.Type == html.TextNode {
 		scanner := bufio.NewScanner(strings.NewReader(n.Data))
 		scanner.Split(bufio.ScanWords)
 		for scanner.Scan() {
@@ -73,11 +78,11 @@ func countWords(n *html.Node) int {
 func countImages(n *html.Node) int {
 	var count int
 	if n.Type == html.ElementNode && n.Data == "img" {
-		for _, img := range n.Attr {
-			if img.Key == "src" {
-				count++
-			}
-		}
+		// for _, img := range n.Attr {
+		// 	if img.Key == "src" {
+		count++
+		// 	}
+		// }
 	}
 	return count
 }

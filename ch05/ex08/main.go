@@ -33,11 +33,13 @@ func main() {
 	}
 }
 
+//TODO endElementはいらない(nilでよい)
 func ElementByID(doc *html.Node, id string) *html.Node {
 	return forEachNode(id, doc, startElement, endElement)
 }
 
 func forEachNode(id string, n *html.Node, pre, post func(id string, n *html.Node) bool) *html.Node {
+	//TODO 結果を変数に格納する必要なし
 	if pre != nil {
 		if result := pre(id, n); result == true {
 			return n

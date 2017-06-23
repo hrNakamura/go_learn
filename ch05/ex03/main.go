@@ -18,6 +18,7 @@ func main() {
 }
 
 func outline(n *html.Node) {
+	//TODO 親要素のDataからscriptやstyleと一致しているか調べる
 	if n.Type == html.TextNode && (n.Data == "script" || n.Data == "style") {
 		if n.NextSibling != nil {
 			outline(n.NextSibling)

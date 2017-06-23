@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"sort"
 )
 
 //!+table
@@ -30,21 +29,15 @@ var prereqs = map[string][]string{
 
 //!+main
 func main() {
-	var keys []int
-	topo := topoSort(prereqs)
-	for key, _ := range topo {
-		keys = append(keys, key)
-	}
-	sort.Ints(keys)
-	for key := range keys {
-		fmt.Printf("%v:\t%v\n", key, topo[key])
+	for i, v := range topoSort(prereqs) {
+		fmt.Printf("%v:\t%v\n", i, v)
 	}
 
 }
 
-func topoSort(m map[string][]string) map[int]string {
-	var count int
-	order := map[int]string{}
+//TODO 戻り値は[]stringでよい
+func topoSort(m map[string][]string) []string {
+	order := []string{}
 	seen := make(map[string]bool)
 	var visitAll func(items []string)
 
@@ -53,18 +46,18 @@ func topoSort(m map[string][]string) map[int]string {
 			if !seen[item] {
 				seen[item] = true
 				visitAll(m[item])
-				order[count] = item
-				count++
+				order = append(order, item)
 			}
 		}
 	}
 
-	var keys []string
+	// var keys []string
 	for key := range m {
-		keys = append(keys, key)
+		// keys = append(keys, key)
+		visitAll([]string{key})
 	}
 
 	// sort.Strings(keys)
-	visitAll(keys)
+	// visitAll(keys)
 	return order
 }
