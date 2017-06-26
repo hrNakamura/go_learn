@@ -10,24 +10,26 @@ import (
 
 type myNewReader struct {
 	s string
+	i int
 }
 
-func (r myNewReader) Read(p []byte) (int, error) {
-	n := copy(p, []byte(r.s))
-	r.s = r.s[n:]
-	if len(r.s) == 0 {
-		return n, io.EOF
+func (r *myNewReader) Read(p []byte) (n int, err error) {
+	if r.i >= len(r.s) {
+		return 0, io.EOF
 	}
-	return n, nil
+	n = copy(p, r.s[r.i:])
+	r.i += n
+	return
 }
 
 func MyNewReader(s string) io.Reader {
-	return &myNewReader{s}
+	return &myNewReader{s, 0}
 }
 
 func main() {
-	s := "<html><body><p>Hello Go</p></body></html>"
-	n, err := html.Parse(MyNewReader(s))
+
+	p := "<html><body><p>hello go</p></body></html>"
+	n, err := html.Parse(MyNewReader(p))
 	if err != nil {
 		log.Fatal(err)
 	} else {

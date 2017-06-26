@@ -14,17 +14,22 @@ import (
 func TestString(t *testing.T) {
 
 	d := &tree{}
-	if d.String() != "0" {
-		t.Error(d.String())
+	exp := "0"
+	if d.String() != exp {
+		t.Errorf("expect=%s, get=%s", exp, d.String())
 	}
+
+	exp = "0, 3"
 	d = add(d, 3)
-	if d.String() != "0, 3" {
-		t.Error(d.String())
+	if d.String() != exp {
+		t.Errorf("expect=%s, get=%s", exp, d.String())
 	}
+
+	exp = "0, 1, 3, 4"
 	d = add(d, 1)
 	d = add(d, 4)
 	if d.String() != "0, 1, 3, 4" {
-		t.Error(d.String())
+		t.Errorf("expect=%s, get=%s", exp, d.String())
 	}
 }
 
