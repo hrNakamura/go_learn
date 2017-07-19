@@ -1,17 +1,8 @@
-// Copyright © 2016 Alan A. A. Donovan & Brian W. Kernighan.
-// License: https://creativecommons.org/licenses/by-nc-sa/4.0/
-
-// See page 187.
-
-// Sorting sorts a music playlist into a variety of orders.
 package main
 
 import (
 	"container/list"
 	"fmt"
-	"html/template"
-	"log"
-	"net/http"
 	"os"
 	"sort"
 	"text/tabwriter"
@@ -76,76 +67,50 @@ func (x byYear) Swap(i, j int)      { x[i], x[j] = x[j], x[i] }
 
 //!-yearcode
 
-var htmlTmpl = template.Must(template.New("tracks").Parse(`
-<html>
-<body>
-<table>
-<tr>
-<th><a href="?sort=Title">Title</a></th>
-<th><a href="?sort=Artist">Artist</a></th>
-<th><a href="?sort=Album">Album</a></th>
-<th><a href="?sort=Year">Year</a></th>
-<th><a href="?sort=Length">Length</a></th>
-</tr>
-{{range .}}
-<tr>
-<td>{{.Title}}</td>
-<td>{{.Artist}}</td>
-<td>{{.Album}}</td>
-<td>{{.Year}}</td>
-<td>{{.Length}}</td>
-</tr>
-{{end}}
-</table>
-</body>
-</html>
-	`))
-
 func main() {
 	history := list.New()
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		clicked := r.FormValue("sort")
-		history.PushBack(clicked)
-		if history.Len() > 5 {
-			history.Remove(history.Front())
-		}
-		sort.Sort(customSort{tracks, func(x, y *Track) bool {
-			if history.Len() == 0 {
-				return x.Title < y.Title
+	if len(os.Args) > 0 {
+		for _, clicked := range os.Args[1:] {
+			history.PushBack(clicked)
+			if history.Len() > 5 {
+				history.Remove(history.Front())
 			}
-			for element := history.Back(); element != nil; element = element.Prev() {
-				switch element.Value {
-				case "Title":
-					if x.Title != y.Title {
-						return x.Title < y.Title
-					}
-				case "Artist":
-					if x.Artist != y.Artist {
-						return x.Artist < y.Artist
-					}
-				case "Album":
-					if x.Album != y.Album {
-						return x.Album < y.Album
-					}
-				case "Year":
-					if x.Year != y.Year {
-						return x.Year < y.Year
-					}
-				case "Length":
-					if x.Length != y.Length {
-						return x.Length < y.Length
-					}
+		}
+	}
+	//!+customcall
+	sort.Sort(customSort{tracks, func(x, y *Track) bool {
+		if history.Len() == 0 {
+			return x.Title < y.Title
+		}
+
+		for element := history.Back(); element != nil; element = element.Prev() {
+			switch element.Value {
+			case "Title":
+				if x.Title != y.Title {
+					return x.Title < y.Title
+				}
+			case "Artist":
+				if x.Artist != y.Artist {
+					return x.Artist < y.Artist
+				}
+			case "Album":
+				if x.Album != y.Album {
+					return x.Album < y.Album
+				}
+			case "Year":
+				if x.Year != y.Year {
+					return x.Year < y.Year
+				}
+			case "Length":
+				if x.Length != y.Length {
+					return x.Length < y.Length
 				}
 			}
-			return false
-		}})
-
-		err := htmlTmpl.Execute(w, tracks)
-		if err != nil {
-			log.Printf("template error: %s", err)
 		}
-	})
-	log.Fatal(http.ListenAndServe("localhost:8000", nil))
+		return false
+	}})
+	//!-customcall
+	printTracks(tracks)
 }
 
 //!+customcode
