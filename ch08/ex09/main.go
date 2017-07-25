@@ -30,15 +30,15 @@ func main() {
 		roots = []string{"."}
 	}
 
-	fileSizes := make(chan RootSize)
+	rootSize := make(chan RootSize)
 	var n sync.WaitGroup
 	for _, root := range roots {
 		n.Add(1)
-		go walkDir(root, root, &n, fileSizes)
+		go walkDir(root, root, &n, rootSize)
 	}
 	go func() {
 		n.Wait()
-		close(fileSizes)
+		close(rootSize)
 	}()
 	//!-
 
@@ -52,12 +52,12 @@ func main() {
 loop:
 	for {
 		select {
-		case size, ok := <-fileSizes:
+		case rs, ok := <-rootSize:
 			if !ok {
 				break loop // fileSizes was closed
 			}
-			nfiles[size.root]++
-			nbytes[size.root] += size.size
+			nfiles[rs.root]++
+			nbytes[rs.root] += rs.size
 		case <-tick:
 			printDiskUsage(nfiles, nbytes)
 		}
@@ -84,15 +84,15 @@ func printDiskUsage(nfiles, nbytes map[string]int64) {
 // walkDir recursively walks the file tree rooted at dir
 // and sends the size of each found file on fileSizes.
 //!+walkDir
-func walkDir(dir, root string, n *sync.WaitGroup, fileSizes chan<- RootSize) {
+func walkDir(dir, root string, n *sync.WaitGroup, rootSize chan<- RootSize) {
 	defer n.Done()
 	for _, entry := range dirents(dir) {
 		if entry.IsDir() {
 			n.Add(1)
 			subdir := filepath.Join(dir, entry.Name())
-			go walkDir(subdir, root, n, fileSizes)
+			go walkDir(subdir, root, n, rootSize)
 		} else {
-			fileSizes <- RootSize{root, entry.Size()}
+			rootSize <- RootSize{root, entry.Size()}
 		}
 	}
 }
