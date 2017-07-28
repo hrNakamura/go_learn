@@ -23,6 +23,7 @@ var tracks = []*Track{
 	{"Go", "Moby", "Moby", 1992, length("3m37s")},
 	{"Go Ahead", "Alicia Keys", "As I Am", 2007, length("4m36s")},
 	{"Ready 2 Go", "Martin Solveig", "Smash", 2011, length("4m24s")},
+	{"GoGo", "Delilah", "Roots", 2012, length("3m38s")},
 }
 
 func length(s string) time.Duration {
@@ -67,6 +68,24 @@ func (x byYear) Swap(i, j int)      { x[i], x[j] = x[j], x[i] }
 
 //!-yearcode
 
+type byTitle []*Track
+
+func (x byTitle) Len() int           { return len(x) }
+func (x byTitle) Less(i, j int) bool { return x[i].Title < x[j].Title }
+func (x byTitle) Swap(i, j int)      { x[i], x[j] = x[j], x[i] }
+
+type byAlbum []*Track
+
+func (x byAlbum) Len() int           { return len(x) }
+func (x byAlbum) Less(i, j int) bool { return x[i].Album < x[j].Album }
+func (x byAlbum) Swap(i, j int)      { x[i], x[j] = x[j], x[i] }
+
+type byLength []*Track
+
+func (x byLength) Len() int           { return len(x) }
+func (x byLength) Less(i, j int) bool { return x[i].Length < x[j].Length }
+func (x byLength) Swap(i, j int)      { x[i], x[j] = x[j], x[i] }
+
 func main() {
 	history := list.New()
 	if len(os.Args) > 0 {
@@ -77,12 +96,10 @@ func main() {
 			}
 		}
 	}
-	//!+customcall
-	sort.Sort(customSort{tracks, func(x, y *Track) bool {
+	sortFunc := func(x, y *Track) bool {
 		if history.Len() == 0 {
 			return x.Title < y.Title
 		}
-
 		for element := history.Back(); element != nil; element = element.Prev() {
 			switch element.Value {
 			case "Title":
@@ -108,8 +125,28 @@ func main() {
 			}
 		}
 		return false
-	}})
+	}
+	//!+customcall
+	sort.Sort(customSort{tracks, sortFunc})
 	//!-customcall
+	printTracks(tracks)
+
+	fmt.Println("")
+
+	for element := history.Back(); history.Len() != 0 && element != nil; element = element.Prev() {
+		switch element {
+		case "Title":
+			sort.Stable(byTitle(tracks))
+		case "Artist":
+			sort.Stable(byArtist(tracks))
+		case "Album":
+			sort.Stable(byAlbum(tracks))
+		case "Year":
+			sort.Stable(byYear(tracks))
+		case "Length":
+			sort.Stable(byLength(tracks))
+		}
+	}
 	printTracks(tracks)
 }
 

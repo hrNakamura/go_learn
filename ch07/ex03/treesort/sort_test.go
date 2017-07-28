@@ -12,7 +12,21 @@ import (
 )
 
 func TestString(t *testing.T) {
-
+	for _, test := range []struct {
+		ints     []int
+		expected string
+	}{
+		{nil, "0"},
+		{[]int{3}, "0, 3"},
+	} {
+		d := &tree{}
+		for _, value := range test.ints {
+			d = add(d, value)
+		}
+		if d.String() != test.expected {
+			t.Errorf("expect=%s, get=%s", test.expected, d.String())
+		}
+	}
 	d := &tree{}
 	exp := "0"
 	if d.String() != exp {

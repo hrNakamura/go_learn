@@ -51,7 +51,16 @@ func (c *ftpConn) ls() error {
 }
 
 func (c *ftpConn) cd(dst string) {
-
+	var sep string
+	if runtime.GOOS == "windows" {
+		sep = "\\"
+	} else {
+		sep = "/"
+	}
+	dirs := strings.Split(dst, sep)
+	var dstFull string
+	for i, path := range dirs {
+	}
 }
 
 func (c *ftpConn) handleConn() {
