@@ -1,12 +1,14 @@
+// Package bank provides a concurrency-safe bank with one account.
 package bank
 
 var deposits = make(chan int) // send amount to deposit
 var balances = make(chan int) // receive balance
-var result = make(chan bool)
+var withdrawal = make(chan int)
+var results = make(chan bool)
 
 func Deposit(amount int)       { deposits <- amount }
 func Balance() int             { return <-balances }
-func Withdraw(amount int) bool { return amount <= Balance() }
+func Withdraw(amount int) bool { withdrawal <- amount; return <-results }
 
 func teller() {
 	var balance int // balance is confined to teller goroutine
@@ -15,6 +17,13 @@ func teller() {
 		case amount := <-deposits:
 			balance += amount
 		case balances <- balance:
+		case amount := <-withdrawal:
+			if balance < amount {
+				results <- false
+			} else {
+				balance -= amount
+				results <- true
+			}
 		}
 	}
 }
@@ -22,3 +31,5 @@ func teller() {
 func init() {
 	go teller() // start the monitor goroutine
 }
+
+//!-
