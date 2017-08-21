@@ -1,2 +1,2 @@
 cd %~dp0
-go run ./main.go
+go run ./main.go -p 21
