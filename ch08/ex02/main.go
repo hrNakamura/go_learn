@@ -184,14 +184,22 @@ func (c *ftpConn) list(cmds []string) {
 			return
 		}
 		for _, f := range files {
-			_, err = fmt.Fprintf(conn, "%s %d\t%s\t%s\r\n", f.Mode(), f.Size(), f.ModTime(), f.Name())
+			if strings.ToUpper(cmds[0]) == "LIST" {
+				_, err = fmt.Fprintf(conn, "%s %d\t%s\t%s\r\n", f.Mode(), f.Size(), f.ModTime(), f.Name())
+			} else {
+				_, err = fmt.Fprintf(conn, "%s\r\n", f.Name())
+			}
 			if err != nil {
 				c.println("426 Connection closed; transfer aborted.")
 				return
 			}
 		}
 	} else {
-		_, err = fmt.Fprintf(conn, "%s %d\t%s\t%s\r\n", stat.Mode(), stat.Size(), stat.ModTime(), stat.Name())
+		if strings.ToUpper(cmds[0]) == "LIST" {
+			_, err = fmt.Fprintf(conn, "%s %d\t%s\t%s\r\n", stat.Mode(), stat.Size(), stat.ModTime(), stat.Name())
+		} else {
+			_, err = fmt.Fprintf(conn, "%s\r\n", stat.Name())
+		}
 		if err != nil {
 			c.println("426 Connection closed; transfer aborted.")
 			return
@@ -314,9 +322,13 @@ LOOP:
 			c.port(cmds)
 		case "SYST":
 			c.syst()
+		case "XPWD":
+			c.pwd()
 		case "PWD":
 			c.pwd()
 		case "LIST":
+			c.list(cmds)
+		case "NLST":
 			c.list(cmds)
 		case "PASV":
 			c.pasv()
