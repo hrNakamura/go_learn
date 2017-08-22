@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
 	"net"
 	"os"
@@ -14,14 +15,13 @@ import (
 	"strings"
 )
 
-const remoteRoot = "C:\\Users\\Admin\\Documents\\_src\\go\\src\\myProject\\go_learn"
+var remoteRoot string
 
 type ftpConn struct {
 	conn         net.Conn
 	prevCmd      string
 	dir          string
 	sep          string
-	err          error
 	username     string
 	password     string
 	addr         string
@@ -38,7 +38,10 @@ func newFTPConn(c net.Conn) *ftpConn {
 
 func (c *ftpConn) println(s ...interface{}) {
 	s = append(s, "\r\n")
-	_, c.err = fmt.Fprint(c.conn, s...)
+	_, err := fmt.Fprint(c.conn, s...)
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 func (c *ftpConn) user(cmds []string) {
@@ -96,7 +99,6 @@ func (c *ftpConn) pasv() {
 		c.pasvListener.Close()
 		return
 	}
-	fmt.Println(port)
 	host, _, err := net.SplitHostPort(c.conn.LocalAddr().String())
 	if err != nil {
 		c.println("451 aborted. Local error in processing.")
@@ -132,7 +134,19 @@ func (c *ftpConn) syst() {
 }
 
 func (c *ftpConn) pwd() {
-	c.println(fmt.Sprintf("257 \"%s\" is current directory", c.dir))
+	relPath, err := filepath.Rel(remoteRoot, c.dir)
+	if err != nil {
+		log.Print(err)
+		c.println("451 Requested action aborted. Local error in processing.")
+		return
+	}
+	relPath = strings.Replace(relPath, "\\", "/", -1)
+	if []rune(relPath)[0] == '.' {
+		relPath = "/"
+	} else {
+		relPath = "/" + relPath
+	}
+	c.println(fmt.Sprintf("257 \"%s\" is current directory", relPath))
 }
 
 func (c *ftpConn) list(cmds []string) {
@@ -149,42 +163,35 @@ func (c *ftpConn) list(cmds []string) {
 	}
 	conn, err := c.createDataConn()
 	if err != nil {
-		fmt.Println(err)
 		c.println("425 Can't open data connection.")
 		return
 	}
 	defer conn.Close()
 	c.println("150 Opening ASCII mode data connection")
 
-	absPath := filepath.Join(c.dir, target)
-	file, err := os.Open(absPath)
-	if err != nil {
-		fmt.Println(err)
-		c.println("550 Requested action not taken.")
-		return
-	}
-	stat, err := file.Stat()
+	absPath, _, stat, err := c.checkValidPath(target)
 	if err != nil {
 		fmt.Println(err)
 		c.println("450 Requested file action not taken.")
 		return
 	}
 	if stat.IsDir() {
-		files, err := file.Readdirnames(0)
+		var files []os.FileInfo
+		files, err = ioutil.ReadDir(absPath)
 		if err != nil {
 			fmt.Println(err)
 			c.println("550 Requested action not taken.")
 			return
 		}
 		for _, f := range files {
-			_, err = fmt.Fprintf(conn, "%s\r\n", f)
+			_, err = fmt.Fprintf(conn, "%s %d\t%s\t%s\r\n", f.Mode(), f.Size(), f.ModTime(), f.Name())
 			if err != nil {
 				c.println("426 Connection closed; transfer aborted.")
 				return
 			}
 		}
 	} else {
-		_, err = fmt.Fprintf(conn, "%s\r\n", target)
+		_, err = fmt.Fprintf(conn, "%s %d\t%s\t%s\r\n", stat.Mode(), stat.Size(), stat.ModTime(), stat.Name())
 		if err != nil {
 			c.println("426 Connection closed; transfer aborted.")
 			return
@@ -205,26 +212,95 @@ func (c *ftpConn) createDataConn() (conn io.ReadWriteCloser, err error) {
 	return
 }
 
-func (c *ftpConn) cd(dst string) {
-	// var sep string
-	// if runtime.GOOS == "windows" {
-	// 	sep = "\\"
-	// } else {
-	// 	sep = "/"
-	// }
-	// dirs := strings.Split(dst, sep)
-	// var dstFull string
-	// for i, path := range dirs {
-	// }
+func (c *ftpConn) cwd(cmds []string) {
+	if len(cmds) != 2 {
+		c.println("501 Syntax error, command unrecognized.")
+		return
+	}
+	fullPath, _, stat, err := c.checkValidPath(cmds[1])
+	if err != nil || !stat.IsDir() {
+		c.println("451 Requested action aborted. Local error in processing.")
+		return
+	}
+	c.dir = fullPath
+	fmt.Println(c.dir)
+	c.println("250 Requested file action okay, completed.")
+}
+
+func (c *ftpConn) checkValidPath(relPath string) (fullPath string, file *os.File, stat os.FileInfo, err error) {
+	if []rune(relPath)[0] == '/' {
+		root := remoteRoot + string(filepath.Separator)
+		fullPath = strings.Replace(relPath, "/", root, 1)
+	} else {
+		fullPath = filepath.Join(c.dir, relPath)
+	}
+	file, err = os.Open(fullPath)
+	if err != nil {
+		return
+	}
+	rel, err := filepath.Rel(remoteRoot, fullPath)
+	if err != nil {
+		return
+	}
+	if strings.Split(rel, string(filepath.Separator))[0] == ".." {
+		err = fmt.Errorf("path: %s upper remote root", relPath)
+		return
+	}
+	stat, err = file.Stat()
+	return
+}
+
+func (c *ftpConn) size(cmds []string) {
+	if len(cmds) != 2 {
+		c.println("501 Syntax error in parameters or arguments.")
+		return
+	}
+
+	_, _, stat, err := c.checkValidPath(cmds[1])
+	if err != nil {
+		log.Print(err)
+		c.println("451 Requested action aborted. Local error in processing.")
+		return
+	}
+	if stat.IsDir() {
+		c.println("450 Requested file action not taken.")
+		return
+	}
+	c.println(fmt.Sprintf("213 %d", stat.Size()))
+}
+
+func (c *ftpConn) retr(cmds []string) {
+	if len(cmds) != 2 {
+		c.println("501 Syntax error in parameters or arguments.")
+		return
+	}
+	_, file, stat, err := c.checkValidPath(cmds[1])
+	if err != nil || stat.IsDir() {
+		c.println("450 Requested file action not taken.")
+		return
+	}
+	conn, err := c.createDataConn()
+	if err != nil {
+		c.println("425 Can't open data connection.")
+		return
+	}
+	defer conn.Close()
+	c.println(fmt.Sprintf("150 Opening BINARY mode data connection for '%s'(%d bytes).", stat.Name(), stat.Size()))
+	_, err = io.Copy(conn, file)
+	if err != nil {
+		c.println("450 Requested file action not taken.")
+		return
+	}
+	c.println("226 Closing data connection.")
 }
 
 func (c *ftpConn) handleConn() {
 	defer c.conn.Close()
-	c.println("220 Ready.")
 	s := bufio.NewScanner(c.conn)
+	c.println("220 Ready.")
 LOOP:
 	for s.Scan() {
-		fmt.Println(s.Text())
+		log.Println(s.Text())
 		cmds := strings.Fields(s.Text())
 		if len(cmds) == 0 {
 			continue
@@ -244,6 +320,12 @@ LOOP:
 			c.list(cmds)
 		case "PASV":
 			c.pasv()
+		case "CWD":
+			c.cwd(cmds)
+		case "SIZE":
+			c.size(cmds)
+		case "RETR":
+			c.retr(cmds)
 		case "QUIT":
 			c.println("221 Goodbye.")
 			break LOOP
@@ -252,17 +334,22 @@ LOOP:
 		}
 		c.prevCmd = strings.ToUpper(cmds[0])
 	}
-	fmt.Printf("Close FTP Server:%s", c.conn.LocalAddr().String())
+	log.Printf("Close: %s", c.conn.RemoteAddr().String())
 }
 
 func main() {
-	port := flag.Int("p", 8000, "FTP port")
+	var err error
+	remoteRoot, err = os.Getwd()
+	if err != nil {
+		log.Fatal(err)
+	}
+	port := flag.Int("p", 21, "FTP port")
 	flag.Parse()
 	listener, err := net.Listen("tcp4", fmt.Sprintf(":%d", *port))
 	if err != nil {
 		log.Fatal(err)
 	}
-
+	log.Println("run FTP Server")
 	for {
 		conn, err := listener.Accept()
 		if err != nil {
