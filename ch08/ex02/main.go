@@ -169,7 +169,16 @@ func (c *ftpConn) list(cmds []string) {
 	defer conn.Close()
 	c.println("150 Opening ASCII mode data connection")
 
-	absPath, _, stat, err := c.checkValidPath(target)
+	fullPath, err := c.resolveFullPath(target)
+	if err != nil {
+		c.println("451 Requested action aborted. Local error in processing.")
+		return
+	}
+	stat, err := os.Stat(fullPath)
+	if err != nil || !stat.IsDir() {
+		c.println("451 Requested action aborted. Local error in processing.")
+		return
+	}
 	if err != nil {
 		fmt.Println(err)
 		c.println("450 Requested file action not taken.")
@@ -177,7 +186,7 @@ func (c *ftpConn) list(cmds []string) {
 	}
 	if stat.IsDir() {
 		var files []os.FileInfo
-		files, err = ioutil.ReadDir(absPath)
+		files, err = ioutil.ReadDir(fullPath)
 		if err != nil {
 			fmt.Println(err)
 			c.println("550 Requested action not taken.")
@@ -225,7 +234,12 @@ func (c *ftpConn) cwd(cmds []string) {
 		c.println("501 Syntax error, command unrecognized.")
 		return
 	}
-	fullPath, _, stat, err := c.checkValidPath(cmds[1])
+	fullPath, err := c.resolveFullPath(cmds[1])
+	if err != nil {
+		c.println("451 Requested action aborted. Local error in processing.")
+		return
+	}
+	stat, err := os.Stat(fullPath)
 	if err != nil || !stat.IsDir() {
 		c.println("451 Requested action aborted. Local error in processing.")
 		return
@@ -235,26 +249,20 @@ func (c *ftpConn) cwd(cmds []string) {
 	c.println("250 Requested file action okay, completed.")
 }
 
-func (c *ftpConn) checkValidPath(relPath string) (fullPath string, file *os.File, stat os.FileInfo, err error) {
-	if []rune(relPath)[0] == '/' {
+func (c *ftpConn) resolveFullPath(p string) (fullPath string, err error) {
+	if []rune(p)[0] == '/' {
 		root := remoteRoot + string(filepath.Separator)
-		fullPath = strings.Replace(relPath, "/", root, 1)
+		fullPath = strings.Replace(p, "/", root, 1)
 	} else {
-		fullPath = filepath.Join(c.dir, relPath)
-	}
-	file, err = os.Open(fullPath)
-	if err != nil {
-		return
+		fullPath = filepath.Join(c.dir, p)
 	}
 	rel, err := filepath.Rel(remoteRoot, fullPath)
 	if err != nil {
 		return
 	}
 	if strings.Split(rel, string(filepath.Separator))[0] == ".." {
-		err = fmt.Errorf("path: %s upper remote root", relPath)
 		return
 	}
-	stat, err = file.Stat()
 	return
 }
 
@@ -264,7 +272,12 @@ func (c *ftpConn) size(cmds []string) {
 		return
 	}
 
-	_, _, stat, err := c.checkValidPath(cmds[1])
+	fullPath, err := c.resolveFullPath(cmds[1])
+	if err != nil {
+		c.println("451 Requested action aborted. Local error in processing.")
+		return
+	}
+	stat, err := os.Stat(fullPath)
 	if err != nil {
 		log.Print(err)
 		c.println("451 Requested action aborted. Local error in processing.")
@@ -282,7 +295,17 @@ func (c *ftpConn) retr(cmds []string) {
 		c.println("501 Syntax error in parameters or arguments.")
 		return
 	}
-	_, file, stat, err := c.checkValidPath(cmds[1])
+	fullPath, err := c.resolveFullPath(cmds[1])
+	if err != nil {
+		c.println("451 Requested action aborted. Local error in processing.")
+		return
+	}
+	file, err := os.Open(fullPath)
+	if err != nil {
+		c.println("450 Requested file action not taken.")
+		return
+	}
+	stat, err := os.Stat(fullPath)
 	if err != nil || stat.IsDir() {
 		c.println("450 Requested file action not taken.")
 		return
@@ -297,6 +320,48 @@ func (c *ftpConn) retr(cmds []string) {
 	_, err = io.Copy(conn, file)
 	if err != nil {
 		c.println("450 Requested file action not taken.")
+		return
+	}
+	c.println("226 Closing data connection.")
+}
+
+func (c *ftpConn) mkd(cmds []string) {
+	if len(cmds) != 2 {
+		c.println("501 Syntax error in parameters or arguments.")
+		return
+	}
+	fullPath, err := c.resolveFullPath(cmds[1])
+	if err != nil {
+		c.println("451 Requested action aborted. Local error in processing.")
+		return
+	}
+	if err := os.Mkdir(fullPath, 0777); err != nil {
+		c.println("450 	Requested file action not taken.")
+		return
+	}
+	c.println(fmt.Sprintf("\"%s\" created.", cmds[1]))
+}
+
+func (c *ftpConn) stor(cmds []string) {
+	if len(cmds) != 2 {
+		c.println("501 Syntax error in parameters or arguments.")
+		return
+	}
+	file, err := os.Create(cmds[1])
+	if err != nil {
+		c.println("550 Requested action not taken.")
+		return
+	}
+	defer file.Close()
+	c.println("150 File status okay; about to open data connection.")
+	conn, err := c.createDataConn()
+	if err != nil {
+		c.println("425 Can't open data connection.")
+		return
+	}
+	defer conn.Close()
+	if _, err := io.Copy(file, conn); err != nil {
+		c.println("450 	Requested file action not taken.")
 		return
 	}
 	c.println("226 Closing data connection.")
@@ -338,6 +403,12 @@ LOOP:
 			c.size(cmds)
 		case "RETR":
 			c.retr(cmds)
+		case "MKD":
+			c.mkd(cmds)
+		case "XMKD":
+			c.mkd(cmds)
+		case "STOR":
+			c.stor(cmds)
 		case "QUIT":
 			c.println("221 Goodbye.")
 			break LOOP
