@@ -1,5 +1,8 @@
 package main
 
+// ftp-responsecode
+// http://www.atmarkit.co.jp/fnetwork/rensai/netpro10/ftp-responsecode.html
+
 import (
 	"bufio"
 	"flag"
