@@ -4,9 +4,10 @@ import (
 	"archive/zip"
 	"bytes"
 	"io"
-	archiver "myProject/go_learn/ch10/ex02/archiver"
 	"os"
 	"strings"
+
+	"github.com/hrNakamura/go_learn/ch10/ex02/archiver"
 )
 
 const suffix = ".zip"

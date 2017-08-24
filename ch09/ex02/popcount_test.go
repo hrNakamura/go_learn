@@ -3,7 +3,7 @@ package popcount_test
 import (
 	"testing"
 
-	popcount "myProject/go_learn/ch09/ex02"
+	popcount "github.com/hrNakamura/go_learn/ch09/ex02"
 )
 
 func TestPopCount(t *testing.T) {

@@ -8,7 +8,7 @@ import (
 	"sync"
 	"testing"
 
-	memo "myProject/go_learn/ch09/ex03"
+	memo "github.com/hrNakamura/go_learn/ch09/ex03"
 )
 
 func TestMemo(t *testing.T) {

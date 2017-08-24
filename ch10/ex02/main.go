@@ -1,10 +1,11 @@
 package main
 
 import (
-	"myProject/go_learn/ch10/ex02/archiver"
-	_ "myProject/go_learn/ch10/ex02/archiver/tar"
-	_ "myProject/go_learn/ch10/ex02/archiver/zip"
 	"os"
+
+	"github.com/hrNakamura/go_learn/ch10/ex02/archiver"
+	_ "github.com/hrNakamura/go_learn/ch10/ex02/archiver/tar"
+	_ "github.com/hrNakamura/go_learn/ch10/ex02/archiver/zip"
 )
 
 func main() {

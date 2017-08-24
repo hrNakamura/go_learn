@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	bank "myProject/go_learn/ch09/ex01"
+	bank "github.com/hrNakamura/go_learn/ch09/ex01"
 )
 
 func TestWithdraw(t *testing.T) {
