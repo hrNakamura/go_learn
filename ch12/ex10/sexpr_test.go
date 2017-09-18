@@ -4,7 +4,6 @@
 package sexpr
 
 import (
-	"bytes"
 	"reflect"
 	"testing"
 )
@@ -72,51 +71,6 @@ func Test(t *testing.T) {
 		t.Fatal(err)
 	}
 	t.Logf("MarshalIdent() = %s\n", data)
-}
-
-func TestDecoder(t *testing.T) {
-	type Movie struct {
-		Title, Subtitle string
-		Year            int
-		Actor           map[string]string
-		Oscars          []string
-		Sequel          *string
-	}
-	strangelove := Movie{
-		Title:    "Dr. Strangelove",
-		Subtitle: "How I Learned to Stop Worrying and Love the Bomb",
-		Year:     1964,
-		Actor: map[string]string{
-			"Dr. Strangelove":            "Peter Sellers",
-			"Grp. Capt. Lionel Mandrake": "Peter Sellers",
-			"Pres. Merkin Muffley":       "Peter Sellers",
-			"Gen. Buck Turgidson":        "George C. Scott",
-			"Brig. Gen. Jack D. Ripper":  "Sterling Hayden",
-			`Maj. T.J. "King" Kong`:      "Slim Pickens",
-		},
-		Oscars: []string{
-			"Best Actor (Nomin.)",
-			"Best Adapted Screenplay (Nomin.)",
-			"Best Director (Nomin.)",
-			"Best Picture (Nomin.)",
-		},
-	}
-	// Encode it
-	data, err := Marshal(strangelove)
-	if err != nil {
-		t.Fatalf("Marshal failed: %v", err)
-	}
-	t.Logf("Marshal() = %s\n", data)
-
-	// Decode it
-	var movie Movie
-	if err := NewDecoder(bytes.NewReader(data)).Decode(&movie); err != nil {
-		t.Fatalf("Decode failed: %v", err)
-	}
-	if !reflect.DeepEqual(movie, strangelove) {
-		t.Fatalf("Decoder not equaled")
-	}
-	t.Logf("S-exp. Decode: %v", movie)
 }
 
 func TestBool(t *testing.T) {
@@ -217,5 +171,54 @@ func TestComplex128(t *testing.T) {
 		if string(b) != test.want {
 			t.Errorf("Marshal(%g) get %s, want %s", test.v, b, test.want)
 		}
+	}
+}
+
+func TestInterface(t *testing.T) {
+	type emptyStr struct {
+		a, b, c interface{}
+	}
+	tests := []struct {
+		v    emptyStr
+		want string
+	}{
+		{emptyStr{1, 2, 3}, `((a ("interface {}" 1)) (b ("interface {}" 2)) (c ("interface {}" 3)))`},
+	}
+	for _, test := range tests {
+		b, err := Marshal(test.v)
+		if err != nil {
+			t.Error(err)
+		}
+		if string(b) != test.want {
+			t.Errorf("Marshal(%v) get %s, want %s", test.v, b, test.want)
+		}
+	}
+}
+
+func TestUnmarshal(t *testing.T) {
+	type Values struct {
+		B   bool
+		F32 float32
+		F64 float64
+		I   interface{}
+	}
+	Interfaces["interface {}"] = reflect.TypeOf(int(0))
+	tests := []struct {
+		in   string
+		want Values
+	}{
+		{`((B t) (F32 1.2) (F64 0) (I ("interface {}" 5)))`, Values{true, 1.2, 0, interface{}(5)}},
+		{`((B nil) (F32 0) (F64 1.0) (I ("interface {}" 0)))`, Values{false, 0, 1, interface{}(0)}},
+	}
+	for _, test := range tests {
+		var r Values
+		err := Unmarshal([]byte(test.in), &r)
+		if err != nil {
+			t.Errorf("Unmarshal(%s) fail:%s", test.in, err)
+		}
+		if !reflect.DeepEqual(r, test.want) {
+			t.Errorf("Unmarshal(%s) get %v, want %v", test.in, r, test.want)
+		}
+		t.Logf("Unmarshal(%s) get %v\n", test.in, r)
 	}
 }
