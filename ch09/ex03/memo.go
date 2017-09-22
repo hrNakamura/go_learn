@@ -43,6 +43,9 @@ func (memo *Memo) Get(key string, done chan struct{}) (interface{}, error) {
 	req := request{key, response, done}
 	memo.requests <- req
 	res := <-response
+	//TODO resのerrがキャンセルか判定する
+	//TODO 自分がキャンセルした場合はそのまま終了
+	//TODO 自分でない場合は再度Get
 	select {
 	case <-done:
 		memo.cancels <- req

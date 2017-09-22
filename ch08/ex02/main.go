@@ -264,6 +264,7 @@ func (c *ftpConn) resolveFullPath(p string) (fullPath string, err error) {
 		return
 	}
 	if strings.Split(rel, string(filepath.Separator))[0] == ".." {
+		err = fmt.Errorf("%s upper remote root", p)
 		return
 	}
 	return

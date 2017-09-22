@@ -2,6 +2,9 @@ package intset
 
 import "testing"
 
+//TODO　テストが体系だってない
+//TODO　空実装でもテストが通過してしまう
+//TODO　既存のテストと比較する
 func TestUnionWith(t *testing.T) {
 	intsets := []IntSet{&WordIntSet{}, NewMapIntSet()}
 	var input = []int{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}

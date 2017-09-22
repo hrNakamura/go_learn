@@ -12,5 +12,7 @@ func main() {
 	if len(os.Args) < 2 {
 		os.Exit(1)
 	}
+	//TODO OpenではなくReadする
+	//TODO Openの場合複数のファイルを開けない
 	archiver.Open(os.Args[1], os.Stdout)
 }

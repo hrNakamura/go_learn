@@ -13,7 +13,7 @@ func randomPalindrome(rng *rand.Rand) string {
 	for i, j := 0, n-1; i < j; i++ {
 		r := rune(rng.Intn(0x1000)) // random rune up to '\u0999'
 		runes[i] = r
-		//
+		//TODO 必ず空白が入ることが保証されない
 		if !unicode.IsSpace(r) && !unicode.IsPunct(r) {
 			runes[j] = r
 			j--

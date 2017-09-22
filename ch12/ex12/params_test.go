@@ -48,7 +48,7 @@ func ZipCheck(v interface{}) error {
 
 func TestUnpack(t *testing.T) {
 	type Unpacked struct {
-		Post string `http:"z" check:"zipC"`
+		ZipCode string `http:"z" check:"zipC"`
 	}
 	tests := []struct {
 		req        *http.Request
@@ -73,7 +73,7 @@ func TestUnpack(t *testing.T) {
 
 	for _, test := range tests {
 		var got Unpacked
-		got.Post = ""
+		got.ZipCode = ""
 		err := Unpack(test.req, &got, checks)
 		if err != nil {
 			if test.errMessage != "" && strings.Contains(err.Error(), test.errMessage) {

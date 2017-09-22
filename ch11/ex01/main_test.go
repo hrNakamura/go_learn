@@ -17,6 +17,7 @@ func TestCharCount(t *testing.T) {
 		{"あいういい", map[rune]int{'あ': 1, 'い': 3, 'う': 1}, [utf8.UTFMax + 1]int{0, 0, 0, 5, 0}, 0},
 		{"\U0010FFFF\U0010FFFF", map[rune]int{'\U0010FFFF': 2}, [utf8.UTFMax + 1]int{0, 0, 0, 0, 2}, 0},
 		{"", map[rune]int{}, [utf8.UTFMax + 1]int{0, 0, 0, 0, 0}, 0},
+		//TODO iinvalid:適当な1byteを挿入する
 	}
 	for _, test := range tests {
 		counts, utflen, invalid, err := charCount(strings.NewReader(test.input))

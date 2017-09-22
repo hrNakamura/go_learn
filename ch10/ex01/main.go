@@ -22,6 +22,7 @@ func main() {
 		err = toPNG(os.Stdin, os.Stdout)
 	case "gif":
 		err = toGif(os.Stdin, os.Stdout)
+		//TODO 未対応のフラグセット時のエラーケース
 	}
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error: %v", err)
