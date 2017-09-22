@@ -182,7 +182,7 @@ func TestInterface(t *testing.T) {
 		v    emptyStr
 		want string
 	}{
-		{emptyStr{1, 2, 3}, `((a ("interface {}" 1)) (b ("interface {}" 2)) (c ("interface {}" 3)))`},
+		{emptyStr{1, []int{1, 2, 3}, 4}, `((a ("interface {}" 1)) (b ("interface {}" 2)) (c ("interface {}" 3)))`},
 	}
 	for _, test := range tests {
 		b, err := Marshal(test.v)

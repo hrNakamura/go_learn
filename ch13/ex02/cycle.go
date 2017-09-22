@@ -6,6 +6,7 @@ import (
 )
 
 func cycle(x reflect.Value, seen map[pType]bool) bool {
+	//TODO これでは単に同じフィールドを指すだけで循環だと判定する
 	if x.CanAddr() {
 		p := pType{unsafe.Pointer(x.UnsafeAddr()), x.Type()}
 		if seen[p] {

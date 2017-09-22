@@ -98,8 +98,13 @@ func encode(buf *bytes.Buffer, v reflect.Value) error {
 	case reflect.Complex64, reflect.Complex128:
 		fmt.Fprintf(buf, "#C(%g %g)", real(v.Complex()), imag(v.Complex()))
 	case reflect.Interface:
-		fmt.Fprintf(buf, "(%q ", v.Type())
-		encode(buf, v.Elem())
+		t := v.Type()
+		if t.Name() == "" {
+			fmt.Fprintf(buf, "(%q ", v.Elem().Type().String())
+		} else {
+			fmt.Fprintf(buf, "(%q.q ", t.PkgPath, t.Name())
+		}
+		encode(buf, reflect.Indirect(v).Elem())
 		buf.WriteByte(')')
 	default: // chan, func
 		return fmt.Errorf("unsupported type: %s", v.Type())

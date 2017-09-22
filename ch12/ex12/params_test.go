@@ -48,7 +48,7 @@ func ZipCheck(v interface{}) error {
 
 func TestUnpack(t *testing.T) {
 	type Unpacked struct {
-		ZipCode string `http:"z" check:"zipC"`
+		ZipCode string `http:"z" check:"zipC"` //`json:"v,omitempty"`
 	}
 	tests := []struct {
 		req        *http.Request

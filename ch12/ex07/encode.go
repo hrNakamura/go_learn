@@ -8,8 +8,13 @@ package sexpr
 import (
 	"bytes"
 	"fmt"
+	"io"
 	"reflect"
 )
+
+type Encoder struct {
+	w io.Writer
+}
 
 //!+Marshal
 // Marshal encodes a Go value in S-expression form.
